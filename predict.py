@@ -31,7 +31,7 @@ def main():
     with open("model_config.json", "r", encoding="utf-8") as f:
         config = json.load(f)
 
-    device = torch.device("cuda:1" if torch.cuda.is_available() else "cpu")
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     tokenizer = CustomTokenizer(config["bert_model_name"])
 
@@ -49,12 +49,12 @@ def main():
     if len(sys.argv) > 1:
         input_text = " ".join(sys.argv[1:])
         pred, confidence = predict(input_text, model, tokenizer, device)
-        label = "Желание посетить концерт" if pred == 1 else "Не связано с концертом"
+        label = "Желание посетить концерт" if pred == 1 else "Не связано с концертом или желание его посетить"
         print(f"Текст: {input_text}")
         print(f"Предсказание: {label}")
         print(f"Уверенность: {confidence:.4f}")
     else:
-        raise
+        raise ValueError("Пожалуйста, предоставьте текст для предсказания в качестве аргумента командной строки.")
 
 if __name__ == "__main__":
     main()

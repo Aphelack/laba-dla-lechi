@@ -44,7 +44,7 @@ def main():
     
     print("Анализ нескольких примеров из датасета:\n")
     
-    for i, item in enumerate(dataset[:3]):
+    for i, item in enumerate(dataset[:5]):
         print(f"Пример {i+1}: {item['text']}")
         print(f"Метка: {'Положительный (концерт)' if item['label'] == 1 else 'Отрицательный'}\n")
         

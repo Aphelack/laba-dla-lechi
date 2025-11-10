@@ -15,11 +15,6 @@ class CustomTokenizer:
         doc = self.nlp(text)
         return [token.text for token in doc]
 
-    def preprocess_with_spacy(self, text: str):
-        result = nlp_processing.process_text(text)
-        tokens = result['lemmas']
-        return tokens
-
     def __call__(self, text: str, max_length=128, padding='max_length',
                  truncation=True, return_tensors='pt', add_special_tokens=True):
 

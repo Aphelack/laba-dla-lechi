@@ -320,8 +320,6 @@ def generate_manual_dataset():
     return dataset
 
 def main():
-    print("Генерация датасета...")
-    
     dataset = generate_manual_dataset()
     random.shuffle(dataset)
     

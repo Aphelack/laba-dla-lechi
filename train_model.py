@@ -73,7 +73,7 @@ def main():
     test_dataset = ConcertDataset(X_test, y_test, tokenizer)
     train_loader = DataLoader(train_dataset, batch_size=8, shuffle=True)
     test_loader = DataLoader(test_dataset, batch_size=8)
-    device = torch.device('cuda:1' if torch.cuda.is_available() else 'cpu')
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     model = BertClassifier(bert_model_name)
     model.to(device)
     criterion = nn.CrossEntropyLoss()
