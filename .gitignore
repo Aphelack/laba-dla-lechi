@@ -1,2 +1,7 @@
 .venv/
 .vscode
+__pycache__
+model_config.json
+concert_classifier.pth
+tokenizer/
+concert_classifier_lora.pth
