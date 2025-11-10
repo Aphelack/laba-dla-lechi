@@ -33,14 +33,10 @@ def main():
 
     device = torch.device("cuda:1" if torch.cuda.is_available() else "cpu")
 
-    print("Загрузка токенизатора...")
-    bert_tokenizer = BertTokenizer.from_pretrained("tokenizer")
     tokenizer = CustomTokenizer(config["bert_model_name"])
 
-    print("Загрузка модели с LoRA адаптерами...")
     peft_model_dir = "concert_classifier_peft"
 
-    # Загружаем LoRA PEFT модель
     peft_config = PeftConfig.from_pretrained(peft_model_dir)
     base_model = BertForSequenceClassification.from_pretrained(
         peft_config.base_model_name_or_path,
@@ -50,8 +46,6 @@ def main():
     model.to(device)
     model.eval()
 
-    print(f"Модель загружена и готова к использованию (устройство: {device})\n")
-
     if len(sys.argv) > 1:
         input_text = " ".join(sys.argv[1:])
         pred, confidence = predict(input_text, model, tokenizer, device)
@@ -60,21 +54,7 @@ def main():
         print(f"Предсказание: {label}")
         print(f"Уверенность: {confidence:.4f}")
     else:
-        test_texts = [
-            "Хочу купить билет на концерт Metallica",
-            "Нужно сходить в магазин за продуктами",
-            "Есть билеты на концерт в эту субботу?",
-            "Завтра иду на работу рано утром",
-            "Планирую посетить концерт классической музыки"
-        ]
-        print("Примеры предсказаний:\n")
-        for text in test_texts:
-            pred, confidence = predict(text, model, tokenizer, device)
-            label = "Желание посетить концерт" if pred == 1 else "Не связано с концертом"
-            print(f"Текст: {text}")
-            print(f"Предсказание: {label}")
-            print(f"Уверенность: {confidence:.4f}\n")
-
+        raise
 
 if __name__ == "__main__":
     main()
