@@ -58,6 +58,26 @@ class CustomTokenizer:
                 corrected_words.append(word)
         
         return ' '.join(corrected_words)
+    
+    def __call__(self, text: str, max_length=128, padding='max_length',
+                 truncation=True, return_tensors='pt', add_special_tokens=True, correct_spelling: bool = True):
+        if correct_spelling:
+            text = self.correct_spelling(text)
+        tokens = self.spacy_tokenize(text)
+
+        encoding = self.bert_tokenizer(
+            tokens,
+            is_split_into_words=True,
+            add_special_tokens=add_special_tokens,
+            padding=padding,
+            truncation=truncation,
+            max_length=max_length,
+            return_tensors=return_tensors
+        )
+        return encoding
+
+    def save_pretrained(self, path: str):
+        self.bert_tokenizer.save_pretrained(path)
 
 
 class BertClassifier(nn.Module):
