@@ -27,7 +27,7 @@ class CustomTokenizer:
         with open(path, 'r', encoding='utf-8') as f:
             groups = [line.strip() for line in f if line.strip()]
             
-        patterns = [self.nlp.make_doc(group) for group in groups]
+        patterns = list(self.nlp.pipe(groups))
         self.matcher.add("MUSIC_GROUP", patterns)
         
         # Add to spell checker dictionary
