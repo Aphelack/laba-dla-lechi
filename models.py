@@ -4,15 +4,38 @@ from transformers import BertForSequenceClassification, BertTokenizer
 from peft import LoraConfig, get_peft_model, TaskType
 import nlp_processing
 import spacy
+from spacy.matcher import PhraseMatcher
+from spacy.util import filter_spans
 from spellchecker import SpellChecker
 import os
 
 class CustomTokenizer:
-    def __init__(self, bert_tokenizer_name: str, dictionary_path: str = "russian_proper_dict.txt"):
+    def __init__(self, bert_tokenizer_name: str, dictionary_path: str = "russian_proper_dict.txt", music_groups_path: str = "music_groups.txt"):
         self.bert_tokenizer = BertTokenizer.from_pretrained(bert_tokenizer_name)
         self.nlp = spacy.load("ru_core_news_sm")
         self.spell_checker = SpellChecker(language='ru')
         self._load_custom_dictionary(dictionary_path)
+        
+        self.matcher = PhraseMatcher(self.nlp.vocab, attr="LEMMA")
+        self._load_music_groups(music_groups_path)
+
+    def _load_music_groups(self, path: str):
+        if not os.path.exists(path):
+            print(f"Warning: Music groups file not found: {path}")
+            return
+            
+        with open(path, 'r', encoding='utf-8') as f:
+            groups = [line.strip() for line in f if line.strip()]
+            
+        patterns = [self.nlp.make_doc(group) for group in groups]
+        self.matcher.add("MUSIC_GROUP", patterns)
+        
+        # Add to spell checker dictionary
+        all_words = []
+        for group in groups:
+            all_words.extend(group.split())
+        self.spell_checker.word_frequency.load_words(all_words)
+        print(f"Loaded {len(groups)} music groups")
 
     def _load_custom_dictionary(self, dictionary_path: str):
         try:
@@ -59,11 +82,30 @@ class CustomTokenizer:
                 corrected_words.append(word)
         
         return ' '.join(corrected_words)
+
+    def replace_music_groups(self, text: str) -> str:
+        doc = self.nlp(text)
+        matches = self.matcher(doc)
+        
+        if not matches:
+            return text
+            
+        spans = [doc[start:end] for _, start, end in matches]
+        spans = filter_spans(spans)
+        spans = sorted(spans, key=lambda x: x.start_char, reverse=True)
+        
+        new_text = text
+        for span in spans:
+            new_text = new_text[:span.start_char] + "музыкальная группа" + new_text[span.end_char:]
+            
+        return new_text
     
     def __call__(self, text: str, max_length=128, padding='max_length',
                  truncation=True, return_tensors='pt', add_special_tokens=True, correct_spelling: bool = True):
         if correct_spelling:
             text = self.correct_spelling(text)
+        
+        text = self.replace_music_groups(text)
         tokens = self.spacy_tokenize(text)
 
         encoding = self.bert_tokenizer(
