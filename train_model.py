@@ -47,7 +47,7 @@ def train_epoch(model, dataloader, optimizer, scheduler, criterion, device):
         total_loss += loss.item()
     return total_loss / len(dataloader)
 
-def evaluate(model, dataloader, device):
+def evaluate(model, dataloader, device, threshold=0.85):
     model.eval()
     preds, trues = [], []
     with torch.no_grad():
@@ -56,7 +56,8 @@ def evaluate(model, dataloader, device):
             attention_mask = batch['attention_mask'].to(device)
             labels = batch['label'].to(device)
             logits = model(input_ids, attention_mask)
-            pred = torch.argmax(logits, dim=1)
+            probs = torch.softmax(logits, dim=1)
+            pred = torch.where(probs[:, 1] > threshold, torch.ones_like(labels), torch.zeros_like(labels))
             preds.extend(pred.cpu().numpy())
             trues.extend(labels.cpu().numpy())
     return accuracy_score(trues, preds), classification_report(trues, preds, digits=4)
@@ -68,7 +69,7 @@ def main():
     labels = [item['label'] for item in dataset]
     X_train, X_test, y_train, y_test = train_test_split(texts, labels, test_size=0.2, random_state=42, stratify=labels)
     bert_model_name = 'DeepPavlov/rubert-base-cased-sentence'
-    tokenizer = CustomTokenizer(bert_model_name)
+    tokenizer = CustomTokenizer(bert_model_name, use_api=False)
     train_dataset = ConcertDataset(X_train, y_train, tokenizer)
     test_dataset = ConcertDataset(X_test, y_test, tokenizer)
     train_loader = DataLoader(train_dataset, batch_size=8, shuffle=True)

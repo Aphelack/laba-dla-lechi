@@ -6,7 +6,7 @@ from peft import PeftModel, PeftConfig
 from models import CustomTokenizer
 
 
-def predict(text, model, tokenizer, device, max_length=128):
+def predict(text, model, tokenizer, device, max_length=128, threshold=0.85):
     model.eval()
     encoding = tokenizer(
         text,
@@ -21,8 +21,13 @@ def predict(text, model, tokenizer, device, max_length=128):
     with torch.no_grad():
         logits = model(input_ids=input_ids, attention_mask=attention_mask).logits
         probs = torch.softmax(logits, dim=1)
-        pred = torch.argmax(probs, dim=1).item()
-        confidence = probs[0][pred].item()
+        max_prob, pred = torch.max(probs, dim=1)
+        confidence = max_prob.item()
+        pred = pred.item()
+
+        if confidence < threshold:
+            return 0, confidence
+    
     return pred, confidence
 
 
