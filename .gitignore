@@ -7,3 +7,4 @@ tokenizer/
 concert_classifier_lora.pth
 dataset.json
 concert_classifier_peft/
+.env
